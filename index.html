@@ -1,146 +1,312 @@
-<!doctype html>
-<html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="pt-br">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Avaliação de Alfabetização</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Leitura</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <!-- LOGIN -->
-<section id="login" class="login card">
-  <h1>Avaliação de Alfabetização</h1>
-  <form id="formLogin" novalidate>
-    <label for="lEmail">E-mail</label>
-    <input id="lEmail" type="email" required autocomplete="username">
-    <label for="lSenha">Senha</label>
-    <input id="lSenha" type="password" required autocomplete="current-password">
-    <button class="btn btn-primary" type="submit">Entrar</button>
-    <button class="btn btn-link" type="button" id="btnEsqueci">Esqueci minha senha</button>
-    <p id="loginMsg" class="msg" role="status" aria-live="polite"></p>
-  </form>
-</section>
-
-<!-- APP -->
-<div id="app" hidden>
-  <header class="top">
-    <div>
-      <strong>Avaliação de Alfabetização</strong>
-      <div class="small" id="userInfo"></div>
+<div id="screen-login" class="screen active">
+    <div class="login-box">
+        <div class="logos-login">
+            <img src="logo-prefeitura.png" alt="Prefeitura" onerror="this.style.display='none'">
+            <img src="logo-secretaria.png" alt="Secretaria" onerror="this.style.display='none'">
+        </div>
+        <p style="font-weight:500;font-size:1.1rem;color:#666;margin-bottom:25px;">Gestão & Evolução de Leitura</p>
+        <input type="email" id="email" placeholder="Digite seu E-mail">
+        <input type="password" id="senha" placeholder="Digite sua Senha" onkeydown="if(event.key==='Enter')window.login()">
+        <button class="btn-main" id="btn-login" onclick="window.login()">ACESSAR SISTEMA</button>
+        <p id="msg-login" style="color:var(--red);margin-top:15px;font-weight:bold;"></p>
     </div>
-    <div class="top-r">
-      <span id="netStatus" class="chip"></span>
-      <button class="btn btn-light" id="btnSair">Sair</button>
-    </div>
-  </header>
-
-  <nav class="tabs" role="tablist">
-    <button role="tab" class="tab" data-tab="painel" aria-selected="true">Painel</button>
-    <button role="tab" class="tab" data-tab="avaliacao" aria-selected="false" id="tabAval">Avaliação</button>
-    <button role="tab" class="tab" data-tab="fluxo" aria-selected="false">Fluxo</button>
-    <button role="tab" class="tab" data-tab="usuarios" aria-selected="false" id="tabUsers" hidden>Usuários</button>
-  </nav>
-
-  <main>
-    <!-- PAINEL -->
-    <section id="tab-painel" class="panel" role="tabpanel">
-      <div class="filters card">
-        <label>Buscar<input id="fBusca" type="search" placeholder="Aluno ou escola"></label>
-        <label>Ano<select id="fAno"><option value="">Todos</option><option value="1">1º</option><option value="2">2º</option><option value="3">3º</option><option value="4">4º</option><option value="5">5º</option></select></label>
-        <label>Bimestre<select id="fBim"><option value="">Todos</option><option value="1">1º</option><option value="2">2º</option><option value="3">3º</option><option value="4">4º</option></select></label>
-        <label>Devolutiva<select id="fDev"><option value="">Todas</option><option value="pend">Pendentes</option><option value="ok">Entregues</option></select></label>
-      </div>
-      <div id="stats" class="stats"></div>
-      <div id="barras" class="card bars"></div>
-      <p class="muted small" id="countAval" aria-live="polite"></p>
-      <ul id="listaAval" class="lista"></ul>
-    </section>
-
-    <!-- AVALIAÇÃO -->
-    <section id="tab-avaliacao" class="panel" role="tabpanel" hidden>
-      <form id="formAval" class="card" novalidate>
-        <h2 id="avalFormTitle">Nova avaliação</h2>
-        <input type="hidden" id="aId">
-        <div class="grid2">
-          <div><label for="aAluno">Aluno *</label><input id="aAluno" required maxlength="120"></div>
-          <div><label for="aData">Data *</label><input id="aData" type="date" required></div>
-          <div><label for="aAno">Ano *</label>
-            <select id="aAno" required><option value="">Selecione</option><option value="1">1º ano</option><option value="2">2º ano</option><option value="3">3º ano</option><option value="4">4º ano</option><option value="5">5º ano</option></select></div>
-          <div><label for="aBim">Bimestre *</label>
-            <select id="aBim" required><option value="">Selecione</option><option value="1">1º</option><option value="2">2º</option><option value="3">3º</option><option value="4">4º</option></select></div>
-          <div><label for="aLeitura">Nível de leitura *</label><select id="aLeitura" required></select></div>
-          <div><label for="aEscrita">Hipótese de escrita *</label><select id="aEscrita" required></select></div>
-        </div>
-        <div class="grid2" id="wrapEscola" hidden>
-          <div><label for="aSchoolId">ID da escola *</label><input id="aSchoolId" maxlength="60"></div>
-          <div><label for="aSchoolName">Nome da escola *</label><input id="aSchoolName" maxlength="120"></div>
-        </div>
-        <label for="aInterv">Intervenção pedagógica</label>
-        <textarea id="aInterv" rows="3" maxlength="5000"></textarea>
-        <label for="aDevol">Devolutiva</label>
-        <textarea id="aDevol" rows="3" maxlength="5000"></textarea>
-        <label class="check"><input type="checkbox" id="aDevEntregue"> Devolutiva entregue</label>
-        <div class="actions">
-          <button type="submit" class="btn btn-primary">Salvar avaliação</button>
-          <button type="button" class="btn btn-light" id="btnAvalCancel">Limpar/Cancelar</button>
-        </div>
-        <p id="avalMsg" class="msg" role="status" aria-live="polite"></p>
-      </form>
-    </section>
-
-    <!-- FLUXO -->
-    <section id="tab-fluxo" class="panel card" role="tabpanel" hidden>
-      <h2>Fluxo de trabalho</h2>
-      <ol class="fluxo">
-        <li><strong>Professor</strong> aplica a avaliação e registra leitura, escrita e intervenção.</li>
-        <li><strong>Coordenador</strong> acompanha os resultados da escola e complementa a devolutiva.</li>
-        <li><strong>Devolutiva</strong> é entregue ao professor/família e marcada como entregue.</li>
-        <li><strong>Gestor</strong> consulta os indicadores da escola (somente leitura).</li>
-        <li><strong>Técnico SME</strong> acompanha a rede e gerencia usuários.</li>
-      </ol>
-      <p class="muted small">Sem internet, os registros ficam no aparelho e sincronizam ao reconectar.</p>
-    </section>
-
-    <!-- USUÁRIOS (Técnico SME) -->
-    <section id="tab-usuarios" class="panel" role="tabpanel" hidden>
-      <form id="formUser" class="card" novalidate>
-        <h2 id="userFormTitle">Novo usuário</h2>
-        <input type="hidden" id="uId">
-        <div class="grid2">
-          <div><label for="uNome">Nome *</label><input id="uNome" required maxlength="120"></div>
-          <div><label for="uEmail">E-mail *</label><input id="uEmail" type="email" required autocomplete="off"></div>
-          <div id="wrapSenha"><label for="uSenha">Senha provisória * (mín. 6)</label><input id="uSenha" type="password" minlength="6" autocomplete="new-password"></div>
-          <div><label for="uPerfil">Perfil *</label>
-            <select id="uPerfil" required>
-              <option value="">Selecione</option>
-              <option value="professor">Professor</option>
-              <option value="coordenador">Coordenador pedagógico</option>
-              <option value="gestor">Gestor</option>
-              <option value="tecnico_sme">Técnico SME</option>
-            </select></div>
-          <div><label for="uSchoolId">ID da escola *</label><input id="uSchoolId" maxlength="60" placeholder="ex.: em_joao_silva"></div>
-          <div><label for="uSchoolName">Nome da escola *</label><input id="uSchoolName" maxlength="120"></div>
-        </div>
-        <label class="check"><input type="checkbox" id="uAtivo" checked> Usuário ativo</label>
-        <div class="actions">
-          <button type="submit" class="btn btn-primary">Salvar usuário</button>
-          <button type="button" class="btn btn-light" id="btnUserCancel">Limpar/Cancelar</button>
-        </div>
-        <p id="userMsg" class="msg" role="status" aria-live="polite"></p>
-      </form>
-
-      <div class="filters card">
-        <label>Buscar<input id="fUserBusca" type="search" placeholder="Nome, e-mail ou escola"></label>
-        <label>Perfil<select id="fUserRole"><option value="">Todos</option><option value="professor">Professor</option><option value="coordenador">Coordenador</option><option value="gestor">Gestor</option><option value="tecnico_sme">Técnico SME</option></select></label>
-      </div>
-      <p class="muted small" id="countUsers" aria-live="polite"></p>
-      <ul id="listaUsers" class="lista"></ul>
-    </section>
-  </main>
 </div>
 
-<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<!-- APP PROFESSOR / COORDENADOR -->
+<div id="screen-app" class="screen">
+  <div class="app-container">
+    <div class="app-header">
+        <span id="header-user">Olá</span>
+        <button class="btn-logout" onclick="window.logout()">Sair do Sistema</button>
+    </div>
+
+    <div class="tabs no-print">
+        <button class="tab-btn active" onclick="window.mudarAbaProf('nova')" id="tab-nova">📝 Nova Avaliação</button>
+        <button class="tab-btn" onclick="window.mudarAbaProf('hist')" id="tab-hist">📊 Painel</button>
+        <button class="tab-btn" onclick="window.mudarAbaProf('evo')" id="tab-evo">📈 Evolução</button>
+        <button class="tab-btn hidden" onclick="window.mudarAbaProf('turmas')" id="tab-turmas">🏫 Turmas</button>
+    </div>
+
+    <!-- NOVA AVALIAÇÃO -->
+    <div id="view-nova">
+        <div id="area-config" class="card">
+            <h3 class="card-title">Configurar Avaliação</h3>
+            <label class="lbl">Data:</label>
+            <div class="date-select-group" style="margin:5px 0 15px;">
+                <select id="sel-dia"></select>
+                <select id="sel-mes">
+                    <option value="01">Jan</option><option value="02">Fev</option><option value="03">Mar</option><option value="04">Abr</option>
+                    <option value="05">Mai</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Ago</option>
+                    <option value="09">Set</option><option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
+                </select>
+                <select id="sel-ano"><option>2025</option><option>2026</option><option>2027</option></select>
+            </div>
+
+            <label class="lbl">Escola:</label>
+            <div id="lbl-escola" style="font-weight:bold;margin:5px 0 15px;color:var(--secondary);"></div>
+
+            <label class="lbl">Turma:</label>
+            <select id="sel-turma-cad" style="width:100%;margin-top:5px;" onchange="window.carregarAlunosTurma()"></select>
+            <small id="msg-sem-turma" class="hidden" style="display:block;margin-top:8px;color:var(--red);font-weight:bold;">
+                Nenhuma turma cadastrada. Peça ao coordenador para cadastrar.
+            </small>
+
+            <label class="lbl" style="display:block;margin-top:20px;">Alunos da turma:</label>
+            <textarea id="lista-alunos" class="txt-area" readonly placeholder="Selecione uma turma..."></textarea>
+            <button class="btn-main" onclick="window.iniciarAvaliacao()">🚀 INICIAR AVALIAÇÃO</button>
+        </div>
+
+        <div id="area-avaliacao" class="hidden">
+            <div class="card" style="border-left:6px solid var(--secondary);background:#f8f9fa;">
+                <h3 id="resumo-titulo" style="margin:0;color:var(--secondary);">Escola</h3>
+                <p style="margin:5px 0;color:#555;font-size:1.1rem;"><b id="resumo-data">--</b> | <span id="resumo-sub">Turma</span></p>
+                <div id="stats-rapido" class="stats-pill">0 Avaliados</div>
+            </div>
+            <div id="container-alunos"></div>
+            <div class="card no-print" style="background:#eef2f5;display:flex;gap:10px;">
+                <input type="text" id="extra-nome" placeholder="Aluno novo? Digite o nome..." style="flex:1;margin:0;">
+                <button onclick="window.addExtra()" class="btn-main" style="width:auto;margin:0;padding:0 20px;">+ ADICIONAR</button>
+            </div>
+            <button class="btn-main no-print" id="btn-finalizar" style="background:var(--success);" onclick="window.finalizarAvaliacao()">🚀 FINALIZAR E SALVAR AVALIAÇÃO</button>
+            <button class="btn-main no-print" style="background:#9e9e9e;" onclick="window.voltarConfig()">⬅️ DESCARTAR E VOLTAR</button>
+        </div>
+    </div>
+
+    <!-- PAINEL -->
+    <div id="view-hist" class="hidden">
+        <div class="filter-container">
+            <div class="filter-title">Filtrar Dados</div>
+            <div class="filter-row">
+                <select id="prof-filtro-serie" onchange="window.aplicarFiltrosProf()">
+                    <option value="TODAS">Todas as Séries</option>
+                    <option>1º Ano</option><option>2º Ano</option><option>3º Ano</option><option>4º Ano</option><option>5º Ano</option><option>Multisseriada</option>
+                </select>
+                <select id="prof-filtro-turma" onchange="window.aplicarFiltrosProf()">
+                    <option value="TODAS">Todas as Turmas</option>
+                    <option value="A">Turma A</option><option value="B">Turma B</option><option value="C">Turma C</option><option value="D">Turma D</option>
+                    <option value="E">Turma E</option><option value="F">Turma F</option><option value="G">Turma G</option><option value="H">Turma H</option>
+                    <option value="Unica">Única</option>
+                </select>
+                <select id="prof-ano-filtro" onchange="window.aplicarFiltrosProf()">
+                    <option value="TODOS">Todos os Anos</option><option>2025</option><option>2026</option><option>2027</option>
+                </select>
+            </div>
+            <div class="filter-row" style="background:#f8f9fa;padding:12px;border-radius:8px;border:1px solid #eee;">
+                <span style="font-size:0.9rem;font-weight:bold;color:var(--secondary);">Mês:</span>
+                <div class="chk-group" id="chk-meses-prof"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <div class="stats-bar">
+                    <span style="color:var(--secondary)"><b>Avaliados:</b> <span id="prof-total">0</span></span>
+                    <span style="color:var(--orange)"><b>Ausentes:</b> <span id="prof-ausente">0</span></span>
+                    <span style="color:var(--purple)"><b>Laudos:</b> <span id="prof-laudo">0</span></span>
+                </div>
+                <button class="btn-main btn-small" onclick="window.abrirModalRelatorioAvancado(true)">📄 Relatório Múltiplo</button>
+            </div>
+        </div>
+
+        <div class="dash-grid" id="kpis-prof"></div>
+
+        <div class="card">
+            <h3 style="margin-top:0;color:var(--secondary);display:inline-block;">Turmas Avaliadas</h3>
+            <button class="btn-refresh" onclick="window.carregarHistoricoProf()">🔄 Atualizar</button>
+            <table class="adm-table">
+                <thead><tr><th>Turma</th><th>Data</th><th>Avaliador(a)</th><th>Ações</th></tr></thead>
+                <tbody id="tabela-prof"></tbody>
+            </table>
+            <div id="paginacao-prof" class="pagination"></div>
+        </div>
+    </div>
+
+    <!-- EVOLUÇÃO -->
+    <div id="view-evo" class="hidden">
+        <div class="card">
+            <h3 class="card-title">🔍 Comparar Evolução da Turma</h3>
+            <select id="filtro-evo-turma" style="width:100%;margin-bottom:15px;padding:10px;"></select>
+            <button class="btn-main" onclick="window.gerarRelatorioEvolucao()">GERAR COMPARATIVO</button>
+        </div>
+        <div id="resultado-evo" class="hidden card">
+            <h4 style="margin-top:0;color:var(--primary);">Resultado Comparativo</h4>
+            <p id="evo-info" style="color:#666;background:#fff3e0;padding:8px;border-radius:6px;"></p>
+            <table class="comp-table">
+                <thead><tr><th>Aluno</th><th>Antes</th><th>Agora</th><th>Evolução</th></tr></thead>
+                <tbody id="tabela-evo"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TURMAS (coordenador) -->
+    <div id="view-turmas" class="hidden">
+        <div class="card">
+            <h3 class="card-title" id="titulo-cad-turma">Cadastrar Turma</h3>
+            <input type="hidden" id="cad-turma-id">
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <select id="cad-serie"><option>1º Ano</option><option>2º Ano</option><option>3º Ano</option><option>4º Ano</option><option>5º Ano</option><option>Multisseriada</option></select>
+                <select id="cad-turma"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option><option>Unica</option></select>
+                <select id="cad-ano"><option>2025</option><option selected>2026</option><option>2027</option></select>
+            </div>
+            <textarea id="cad-alunos" class="txt-area" style="height:180px;" placeholder="Cole os nomes dos alunos (um por linha)..."></textarea>
+            <button class="btn-main" onclick="window.salvarTurma()">💾 SALVAR TURMA</button>
+            <button class="btn-main" style="background:#9e9e9e;" onclick="window.limparFormTurma()">Limpar</button>
+        </div>
+        <div class="card">
+            <h3 style="margin-top:0;color:var(--secondary);">Turmas da Escola</h3>
+            <table class="adm-table">
+                <thead><tr><th>Turma</th><th>Alunos</th><th>Ações</th></tr></thead>
+                <tbody id="tabela-turmas"></tbody>
+            </table>
+        </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAINEL GESTOR (tecnico_sme) -->
+<div id="screen-admin" class="screen">
+  <div class="app-container">
+    <div class="app-header" style="background-color:#333;">
+        <span id="header-admin">Painel Gestor</span>
+        <button class="btn-logout" onclick="window.logout()">Sair do Sistema</button>
+    </div>
+
+    <div class="filter-container">
+        <div class="filter-title">Filtros da Rede</div>
+        <div class="filter-row">
+            <select id="filtro-escola" onchange="window.aplicarFiltros()" style="max-width:300px;"><option value="TODAS">Todas as Escolas</option></select>
+            <select id="adm-mes-ini" onchange="window.aplicarFiltros()">
+                <option value="TODOS">Mês (Todos)</option>
+                <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option><option value="04">Abril</option>
+                <option value="05">Maio</option><option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option>
+                <option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+            </select>
+            <select id="adm-ano-ini" onchange="window.aplicarFiltros()">
+                <option value="TODOS">Todos os Anos</option><option>2025</option><option>2026</option><option>2027</option>
+            </select>
+        </div>
+        <div class="filter-row" style="background:#f9f9f9;padding:10px;border-radius:8px;">
+            <div class="chk-group" id="chk-series">
+                <label class="chk-label"><input type="checkbox" value="1º Ano" checked onchange="window.aplicarFiltros()"> 1º</label>
+                <label class="chk-label"><input type="checkbox" value="2º Ano" checked onchange="window.aplicarFiltros()"> 2º</label>
+                <label class="chk-label"><input type="checkbox" value="3º Ano" checked onchange="window.aplicarFiltros()"> 3º</label>
+                <label class="chk-label"><input type="checkbox" value="4º Ano" checked onchange="window.aplicarFiltros()"> 4º</label>
+                <label class="chk-label"><input type="checkbox" value="5º Ano" checked onchange="window.aplicarFiltros()"> 5º</label>
+            </div>
+            <button class="btn-refresh" style="margin-left:auto;" onclick="window.carregarAdmin()">🔄 Atualizar</button>
+        </div>
+        <div class="stats-bar">
+            <span style="color:var(--secondary)"><b>Avaliados:</b> <span id="adm-total">0</span></span>
+            <span style="color:var(--orange)"><b>Ausentes:</b> <span id="adm-ausente">0</span></span>
+            <span style="color:var(--purple)"><b>Laudos:</b> <span id="adm-laudo">0</span></span>
+        </div>
+        <div style="margin-top:15px;padding:15px;background:#f8f9fa;border-radius:8px;border:1px solid #e0e0e0;">
+            <div style="font-weight:bold;color:#555;margin-bottom:10px;">📑 Relatórios Consolidados</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="btn-relatorio-consolidado" onclick="window.abrirModalRelatorioConsolidado('escola')">🏫 Por Escola</button>
+                <button class="btn-relatorio-consolidado" onclick="window.abrirModalRelatorioConsolidado('turma')">📚 Por Turma</button>
+                <button class="btn-relatorio-consolidado" onclick="window.abrirModalRelatorioConsolidado('aluno')">👤 Por Aluno</button>
+                <button class="btn-main btn-small" style="margin-left:auto;" onclick="window.abrirModalRelatorioAvancado(false)">📄 Relatório por Nível</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dash-grid" id="kpis-adm"></div>
+
+    <div class="card">
+        <h3 style="margin-top:0;">Registros</h3>
+        <table class="adm-table">
+            <thead><tr><th>Escola</th><th>Turma</th><th>Data</th><th>Avaliador(a)</th><th>Fluência</th><th>Ações</th></tr></thead>
+            <tbody id="tabela-envios"></tbody>
+        </table>
+        <div id="paginacao-adm" class="pagination"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAIS -->
+<div id="modal-detalhes" class="modal-overlay hidden">
+    <div class="modal-content">
+        <div class="modal-header"><h3 id="modal-titulo">Detalhes</h3><button class="close-btn" onclick="window.fecharModal()">×</button></div>
+        <div class="modal-body" id="modal-body"></div>
+        <div class="modal-footer hidden" id="modal-footer">
+            <button class="btn-main" id="btn-salvar-modal" onclick="window.salvarEdicaoModal()" style="margin:0;">💾 SALVAR ALTERAÇÕES</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-intervencao" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width:650px;">
+        <div class="modal-header" style="background:var(--secondary);"><h3>Foco Pedagógico</h3>
+            <button class="close-btn" onclick="window.fecharEl('modal-intervencao')">×</button></div>
+        <div class="modal-body"><div id="conteudo-pdf-intervencao"></div></div>
+        <div class="modal-footer" style="text-align:center;">
+            <button class="btn-main btn-small" id="modal-interv-btn-print" onclick="window.imprimirIntervencao()">🖨️ GERAR PDF</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-relatorio-avancado" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width:750px;">
+        <div class="modal-header" style="background:var(--secondary);"><h3>📄 Relatório Pedagógico Múltiplo</h3>
+            <button class="close-btn" onclick="window.fecharEl('modal-relatorio-avancado')">×</button></div>
+        <div class="modal-body">
+            <p style="margin-top:0;font-weight:bold;color:#555;">Selecione os níveis:</p>
+            <div class="chk-group" id="chk-niveis-avancado" style="margin-bottom:20px;background:#f8f9fa;padding:15px;border-radius:10px;"></div>
+            <button class="btn-main" onclick="window.gerarVisualizacaoRelatorioAvancado()" style="margin:0 0 20px;">👁️ VISUALIZAR</button>
+            <div id="conteudo-pdf-avancado"></div>
+        </div>
+        <div class="modal-footer" style="text-align:center;">
+            <button class="btn-main btn-small hidden" id="btn-print-avancado" onclick="window.imprimirRelatorioAvancado()">🖨️ GERAR PDF</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-relatorio-consolidado" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width:1100px;">
+        <div class="modal-header"><h3 id="modal-cons-titulo">📑 Relatório Consolidado</h3>
+            <button class="close-btn" onclick="window.fecharEl('modal-relatorio-consolidado')">×</button></div>
+        <div class="modal-body">
+            <div id="filtro-aluno-extra" class="hidden" style="margin-bottom:20px;">
+                <label class="lbl">Filtrar por Nível:</label>
+                <select id="filtro-cons-nivel" onchange="window.gerarVisualizacaoConsolidado()" style="max-width:300px;">
+                    <option value="TODOS">Todos os Níveis</option>
+                    <option>Nível 1</option><option>Nível 2</option><option>Nível 3</option><option>Nível 4</option>
+                    <option>Iniciante</option><option>Fluente</option><option>Ausente</option>
+                </select>
+            </div>
+            <p class="info-box">ℹ️ Respeita os filtros do painel. Ordenação: <b>melhor → pior desempenho</b>.</p>
+            <div id="conteudo-pdf-consolidado"></div>
+        </div>
+        <div class="modal-footer" style="text-align:center;">
+            <button class="btn-main btn-small" id="btn-print-consolidado" onclick="window.imprimirRelatorioConsolidado()">🖨️ GERAR PDF</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-sucesso" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width:500px;text-align:center;">
+        <div class="modal-header" style="background:var(--success);justify-content:center;"><h3>✅ Avaliação Salva!</h3></div>
+        <div class="modal-body" style="padding:30px 20px;">
+            <p style="font-size:1.1rem;color:#555;margin-top:0;">Dados salvos com sucesso. O que deseja fazer?</p>
+            <button class="btn-main" style="background:#D32F2F;" onclick="window.gerarPDF()">📄 BAIXAR PDF DA LISTA</button>
+            <button class="btn-main" style="background:#2E7D32;" onclick="window.compartilharZap()">📱 ENVIAR RESUMO NO WHATSAPP</button>
+        </div>
+        <div class="modal-footer" style="text-align:center;">
+            <button class="btn-main btn-small" style="background:#666;" onclick="window.fecharSucessoEVoltar()">⬅️ VOLTAR AO MENU</button>
+        </div>
+    </div>
+</div>
+
 <script type="module" src="app.js"></script>
 </body>
 </html>
