@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
-    getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+    getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc,
     query, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
@@ -17,6 +17,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+// App secundário: permite à SME criar contas sem ser deslogada
+const authSec = getAuth(initializeApp(firebaseConfig, 'secundario'));
 
 // ================= CONSTANTES / HELPERS =================
 const NIVEIS = ["Nível 1", "Nível 2", "Nível 3", "Nível 4", "Iniciante", "Fluente"];
@@ -33,6 +35,7 @@ const isRural = d => String(d?.serie || '').trim() === 'Multisseriada';
 const byEnvio = (a, b) => new Date(b.data_envio || 0) - new Date(a.data_envio || 0);
 const pct = (v, t) => t > 0 ? (v / t * 100).toFixed(1) : '0.0';
 const norm = s => String(s || '').trim().toUpperCase();
+const slug = s => norm(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Z0-9]+/g, '_');
 window.fecharEl = id => $(id).classList.add('hidden');
 
 function parseData(s) {
@@ -56,7 +59,6 @@ function contar(alunos) {
     return c;
 }
 
-// Alunos ativos da avaliação que passam no filtro de séries (null = todas)
 function alunosFiltrados(d, series) {
     const ativos = detArr(d).filter(a => !a.transferido);
     if (!series) return ativos;
@@ -109,6 +111,7 @@ let turmasCache = [];
 let dadosTurma = {};
 let avalCache = [];
 let todosDadosAdm = [];
+let usuariosCache = [];
 let filteredProf = [], filteredAdm = [];
 let pageProf = 1, pageAdm = 1;
 let modoAvancadoProf = true, nivelAtual = '', tipoCons = 'escola';
@@ -160,14 +163,16 @@ onAuthStateChanged(auth, async (user) => {
             $('header-admin').innerText = `Painel Gestor - ${perfil.name}`;
             $('screen-admin').classList.add('active');
             window.carregarAdmin();
+            window.carregarUsuarios();
         } else if (['professor', 'coordenador'].includes(perfil.role)) {
             if (!perfil.schoolId) throw new Error('Usuário sem escola vinculada.');
             $('screen-app').classList.add('active');
             $('header-user').innerText = `Olá, ${perfil.name} (${perfil.role === 'coordenador' ? 'Coordenação' : 'Professor(a)'})`;
             $('lbl-escola').innerText = perfil.schoolName || '';
-            $('tab-turmas').classList.toggle('hidden', perfil.role !== 'coordenador');
-            window.mudarAbaProf('nova');
+            $('tab-turmas').classList.remove('hidden');
             await window.listarTurmas();
+            window.mudarAbaProf(turmasCache.length ? 'nova' : 'turmas');
+            if (!turmasCache.length) alert('Bem-vindo(a)! Cadastre sua(s) turma(s) para começar.');
             window.carregarHistoricoProf();
         } else {
             throw new Error('Perfil sem permissão.');
@@ -193,11 +198,13 @@ window.mudarAbaProf = (aba) => {
 window.listarTurmas = async () => {
     const snap = await getDocs(query(collection(db, 'turmas'), where('schoolId', '==', perfil.schoolId)));
     turmasCache = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .filter(t => perfil.role === 'coordenador' || t.ownerUid === perfil.uid)
         .sort((a, b) => (b.ano + a.serie + a.turma).localeCompare(a.ano + b.serie + b.turma));
 
     $('tabela-turmas').innerHTML = turmasCache.length
         ? turmasCache.map(t => `<tr>
-            <td><b>${escH(t.serie)} - ${escH(t.turma)}</b> <small>(${escH(t.ano)})</small></td>
+            <td><b>${escH(t.serie)} - ${escH(t.turma)}</b> <small>(${escH(t.ano)})</small>
+                ${perfil.role === 'coordenador' && t.ownerName ? `<br><small>${escH(t.ownerName)}</small>` : ''}</td>
             <td>${(t.alunos || []).length}</td>
             <td><button class="btn-table" onclick="window.editarTurma('${t.id}')">✏️</button>
                 <button class="btn-table" onclick="window.excluirTurma('${t.id}')">🗑️</button></td></tr>`).join('')
@@ -206,7 +213,7 @@ window.listarTurmas = async () => {
     const atual = $('sel-turma-cad').value;
     $('sel-turma-cad').innerHTML = '<option value="">Selecione a turma...</option>' +
         turmasCache.map(t => `<option value="${t.id}">${escH(t.serie)} - Turma ${escH(t.turma)} (${escH(t.ano)})</option>`).join('');
-    $('sel-turma-cad').value = turmasCache.some(t => t.id === atual) ? atual : '';
+    $('sel-turma-cad').value = turmasCache.some(t => t.id === atual) ? atual : (turmasCache.length === 1 ? turmasCache[0].id : '');
     $('msg-sem-turma').classList.toggle('hidden', turmasCache.length > 0);
     window.carregarAlunosTurma();
 };
@@ -220,7 +227,6 @@ window.salvarTurma = async () => {
     if (turmasCache.some(t => t.id !== id && t.serie === serie && t.turma === turma && t.ano === ano))
         return alert('Essa turma já existe!');
 
-    // Mantém laudo/série rural dos alunos que já existiam
     const antigos = id ? (turmasCache.find(t => t.id === id)?.alunos || []) : [];
     const alunos = nomes.map(nome => {
         const a = antigos.find(x => norm(x.nome) === nome);
@@ -233,10 +239,11 @@ window.salvarTurma = async () => {
     };
     try {
         if (id) await updateDoc(doc(db, 'turmas', id), dados);
-        else await addDoc(collection(db, 'turmas'), { ...dados, createdAt: serverTimestamp() });
+        else await addDoc(collection(db, 'turmas'), { ...dados, ownerUid: perfil.uid, ownerName: perfil.name, createdAt: serverTimestamp() });
         alert('✅ Turma salva!');
         window.limparFormTurma();
-        window.listarTurmas();
+        await window.listarTurmas();
+        if (!id && turmasCache.length === 1) window.mudarAbaProf('nova');
     } catch (e) { alert('Erro ao salvar: ' + e.message); }
 };
 
@@ -377,7 +384,6 @@ window.finalizarAvaliacao = async () => {
             total_alunos: c.total, total_avaliados: c.aval, total_ausentes: c.aus,
             resultados: c.cont, detalhes: dadosTurma.alunos
         });
-        // Atualiza a turma: inclui extras, remove transferidos, guarda laudo e série
         await updateDoc(doc(db, 'turmas', dadosTurma.turmaId), {
             alunos: dadosTurma.alunos.filter(a => !a.transferido)
                 .map(a => ({ nome: norm(a.nome), laudo: !!a.laudo, serieRural: a.serieRural || '' })),
@@ -680,6 +686,59 @@ function renderTableAdm() {
 }
 window.mudarPaginaAdm = p => { pageAdm = p; renderTableAdm(); };
 
+// ================= GESTÃO DE USUÁRIOS (SME) =================
+window.carregarUsuarios = async () => {
+    if (!$('tabela-usuarios')) return;
+    try {
+        const snap = await getDocs(collection(db, 'users'));
+        usuariosCache = snap.docs.map(d => ({ uid: d.id, ...d.data() }))
+            .sort((a, b) => String(a.schoolName || '').localeCompare(b.schoolName || '') || String(a.name).localeCompare(b.name));
+        const escolas = [...new Set(usuariosCache.map(u => u.schoolName).filter(Boolean))].sort();
+        $('lista-escolas').innerHTML = escolas.map(e => `<option value="${escH(e)}">`).join('');
+        $('tabela-usuarios').innerHTML = usuariosCache.length ? usuariosCache.map(u => `<tr style="${u.active ? '' : 'opacity:.5'}">
+            <td><b>${escH(u.name)}</b><br><small>${escH(u.email || '')}</small></td>
+            <td>${escH(u.role)}</td><td>${escH(u.schoolName || '-')}</td>
+            <td>${u.uid === perfil.uid ? '' : `<button class="btn-table" onclick="window.toggleUsuario('${u.uid}')">${u.active ? '🚫 Desativar' : '✅ Ativar'}</button>`}</td>
+        </tr>`).join('') : '<tr><td colspan="4">Nenhum usuário.</td></tr>';
+    } catch (e) {
+        console.error(e);
+        $('tabela-usuarios').innerHTML = '<tr><td colspan="4">Erro ao carregar usuários (verifique as regras).</td></tr>';
+    }
+};
+
+window.criarUsuario = async () => {
+    const name = $('u-nome').value.trim(), email = $('u-email').value.trim().toLowerCase();
+    const senha = $('u-senha').value, role = $('u-role').value, schoolName = $('u-escola').value.trim();
+    const msg = $('msg-usuario');
+    if (!name || !email || senha.length < 6) return msg.innerText = 'Preencha nome, e-mail e senha (mín. 6 caracteres).';
+    if (role !== 'tecnico_sme' && !schoolName) return msg.innerText = 'Informe a escola.';
+    msg.innerText = '⏳ Criando...';
+    try {
+        const cred = await createUserWithEmailAndPassword(authSec, email, senha);
+        await setDoc(doc(db, 'users', cred.user.uid), {
+            name, email, role, active: true,
+            schoolName: role === 'tecnico_sme' ? '' : schoolName,
+            schoolId: role === 'tecnico_sme' ? '' : slug(schoolName),
+            createdAt: serverTimestamp(), createdBy: perfil.uid
+        });
+        await signOut(authSec);
+        msg.innerText = `✅ Usuário criado! Login: ${email}`;
+        ['u-nome', 'u-email', 'u-senha'].forEach(id => $(id).value = '');
+        window.carregarUsuarios();
+    } catch (e) {
+        msg.innerText = e.code === 'auth/email-already-in-use' ? 'E-mail já cadastrado.' : 'Erro: ' + e.message;
+    }
+};
+
+window.toggleUsuario = async (uid) => {
+    const u = usuariosCache.find(x => x.uid === uid);
+    if (!u || !confirm(`${u.active ? 'Desativar' : 'Ativar'} ${u.name}?`)) return;
+    try {
+        await updateDoc(doc(db, 'users', uid), { active: !u.active });
+        window.carregarUsuarios();
+    } catch (e) { alert('Erro: ' + e.message); }
+};
+
 // ================= RELATÓRIOS CONSOLIDADOS =================
 const COLS = [...NIVEIS, 'Ausente'];
 
@@ -722,7 +781,6 @@ window.gerarVisualizacaoConsolidado = () => {
     }
 
     if (tipoCons === 'aluno') {
-        // Último nível de cada aluno
         const mapa = new Map();
         filteredAdm.forEach(({ d, alunos }) => alunos.forEach(a => {
             const k = `${d.schoolId}|${norm(a.nome)}`, ant = mapa.get(k);
