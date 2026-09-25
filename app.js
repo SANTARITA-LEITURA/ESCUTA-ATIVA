@@ -33,9 +33,6 @@ const DESC = {
 };
 const PESO = { "Ausente": 0, "Estágio 1": 1, "Estágio 2": 2, "Estágio 3": 3, "Estágio 4": 4, "Estágio 5": 5, "Estágio 6": 6 };
 const CLS = { "Estágio 1": "n1", "Estágio 2": "n2", "Estágio 3": "n3", "Estágio 4": "n4", "Estágio 5": "ini", "Estágio 6": "flu", "Ausente": "aus" };
-
-const PESO = { "Ausente": 0, "Nível 1": 1, "Nível 2": 2, "Nível 3": 3, "Nível 4": 4, "Iniciante": 5, "Fluente": 6 };
-const CLS = { "Nível 1": "n1", "Nível 2": "n2", "Nível 3": "n3", "Nível 4": "n4", "Iniciante": "ini", "Fluente": "flu", "Ausente": "aus" };
 const SERIES_RURAL = ["1º Ano", "2º Ano", "3º Ano", "4º Ano", "5º Ano"];
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const ROWS = 10;
