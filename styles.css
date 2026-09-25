@@ -187,4 +187,45 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);border-c
   width:auto;
   display:block;
 }
+/* ===== Correção de layout no celular ===== */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.app-container,
+.card,
+#container-alunos,
+#area-avaliacao {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+select, input, textarea, button {
+    max-width: 100%;
+    min-width: 0;
+}
+
+#container-alunos select,
+#container-alunos input {
+    width: 100% !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* Itens dentro de linhas flex não estouram */
+#container-alunos * {
+    min-width: 0;
+    word-break: break-word;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
 
