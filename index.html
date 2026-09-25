@@ -216,7 +216,7 @@
                 <button class="btn-relatorio-consolidado" onclick="window.abrirModalRelatorioConsolidado('escola')">🏫 Por Escola</button>
                 <button class="btn-relatorio-consolidado" onclick="window.abrirModalRelatorioConsolidado('turma')">📚 Por Turma</button>
                 <button class="btn-relatorio-consolidado" onclick="window.abrirModalRelatorioConsolidado('aluno')">👤 Por Aluno</button>
-                <button class="btn-main btn-small" style="margin-left:auto;" onclick="window.abrirModalRelatorioAvancado(false)">📄 Relatório por Nível</button>
+                <button class="btn-main btn-small" style="margin-left:auto;" onclick="window.abrirModalRelatorioAvancado(false)">📄 Relatório por Estágio</button>
             </div>
         </div>
     </div>
@@ -253,7 +253,7 @@
     <div class="card">
         <h3 style="margin-top:0;">Registros</h3>
         <table class="adm-table">
-            <thead><tr><th>Escola</th><th>Turma</th><th>Data</th><th>Avaliador(a)</th><th>Fluência</th><th>Ações</th></tr></thead>
+            <thead><tr><th>Escola</th><th>Turma</th><th>Data</th><th>Avaliador(a)</th><th>Estágio 6</th><th>Ações</th></tr></thead>
             <tbody id="tabela-envios"></tbody>
         </table>
         <div id="paginacao-adm" class="pagination"></div>
@@ -288,7 +288,7 @@
         <div class="modal-header" style="background:var(--secondary);"><h3>📄 Relatório Pedagógico Múltiplo</h3>
             <button class="close-btn" onclick="window.fecharEl('modal-relatorio-avancado')">×</button></div>
         <div class="modal-body">
-            <p style="margin-top:0;font-weight:bold;color:#555;">Selecione os níveis:</p>
+            <p style="margin-top:0;font-weight:bold;color:#555;">Selecione os estágios:</p>
             <div class="chk-group" id="chk-niveis-avancado" style="margin-bottom:20px;background:#f8f9fa;padding:15px;border-radius:10px;"></div>
             <button class="btn-main" onclick="window.gerarVisualizacaoRelatorioAvancado()" style="margin:0 0 20px;">👁️ VISUALIZAR</button>
             <div id="conteudo-pdf-avancado"></div>
@@ -305,12 +305,13 @@
             <button class="close-btn" onclick="window.fecharEl('modal-relatorio-consolidado')">×</button></div>
         <div class="modal-body">
             <div id="filtro-aluno-extra" class="hidden" style="margin-bottom:20px;">
-                <label class="lbl">Filtrar por Nível:</label>
+                <label class="lbl">Filtrar por Estágio:</label>
                 <select id="filtro-cons-nivel" onchange="window.gerarVisualizacaoConsolidado()" style="max-width:300px;">
-                    <option value="TODOS">Todos os Níveis</option>
-                    <option>Nível 1</option><option>Nível 2</option><option>Nível 3</option><option>Nível 4</option>
-                    <option>Iniciante</option><option>Fluente</option><option>Ausente</option>
+                    <option value="TODOS">Todos os Estágios</option>
+                    <option>Estágio 1</option><option>Estágio 2</option><option>Estágio 3</option>
+                    <option>Estágio 4</option><option>Estágio 5</option><option>Estágio 6</option><option>Ausente</option>
                 </select>
+
             </div>
             <p class="info-box">ℹ️ Respeita os filtros do painel. Ordenação: <b>melhor → pior desempenho</b>.</p>
             <div id="conteudo-pdf-consolidado"></div>
