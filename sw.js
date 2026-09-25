@@ -1,4 +1,4 @@
-const CACHE = 'leitura-v1';
+const CACHE = 'leitura-v2';
 const ARQUIVOS = ['./', './index.html', './styles.css'];
 
 self.addEventListener('install', e => {
