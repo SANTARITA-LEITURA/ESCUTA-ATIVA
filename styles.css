@@ -1,12 +1,12 @@
 :root{
-  --primary:#1565C0; --secondary:#0D47A1; --success:#2E7D32; --red:#D32F2F;
-  --orange:#f57c00; --purple:#7B1FA2; --gray:#757575;
+  --primary:#0B3D91; --secondary:#082C6C; --success:#2E7D32; --red:#D32F2F;
+  --orange:#EF8A00; --purple:#7B1FA2; --gray:#757575;
+  --accent:#F2C12E; --bg:#ECEDEF; --card:#F7F7F7; --text:#333; --radius:14px;
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:#f0f2f5;color:#333}
-.hidden{display:none!important}
-.screen{display:none}
-.screen.active{display:block}
+body{margin:0;font-family:'Roboto',Arial,sans-serif;background:var(--bg);color:var(--text)}
+h1,h2,h3,h4{font-weight:700}
+
 
 /* LOGIN */
 #screen-login.active{display:flex;min-height:100vh;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--secondary),var(--primary))}
@@ -117,3 +117,46 @@ tr.transferido{opacity:.5;text-decoration:line-through}
 .relatorio-resumo-geral h4{margin:0 0 5px}
 
 @media(max-width:600px){.aluno-row{flex-direction:column;align-items:flex-start}.app-header{flex-direction:column;gap:8px}}
+/* ===== TEMA PREFEITURA ===== */
+#screen-login.active{background:linear-gradient(rgba(11,61,145,.88),rgba(8,44,108,.95)),var(--primary)}
+.login-box{border-radius:var(--radius);box-shadow:0 12px 30px rgba(0,0,0,.25)}
+.login-box p{font-weight:700;color:var(--primary)!important}
+
+.app-header{background:var(--primary);border-radius:0 0 var(--radius) var(--radius);font-weight:700;padding:18px 24px}
+.app-header-admin{background:var(--secondary)}
+.btn-logout{background:transparent;border:1px solid #fff;border-radius:8px;font-weight:500}
+.btn-logout:hover{background:var(--accent);color:var(--secondary);border-color:var(--accent)}
+
+.btn-main{background:var(--primary);border-radius:10px;font-weight:700;transition:.2s}
+.btn-main:hover{opacity:1;filter:brightness(1.12)}
+.btn-small{background:var(--accent)!important;color:var(--secondary)!important}
+
+.tabs{background:#fff;padding:6px;border-radius:var(--radius)}
+.tab-btn{background:transparent;box-shadow:none;color:#333;border-radius:10px;font-weight:700}
+.tab-btn:hover{background:#f1f1f1}
+.tab-btn.active{background:var(--accent);color:var(--secondary)}
+
+.card,.filter-container{background:#fff;border-radius:var(--radius);box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.card-title{color:#333;font-weight:700;border-bottom:none;border-left:4px solid var(--accent);padding:0 0 0 12px}
+.filter-title{color:#333;border-bottom:none;border-left:4px solid var(--accent);padding-left:10px}
+
+.kpi-card{background:var(--card);border-radius:var(--radius);box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.kpi-card:hover{background:#fff;box-shadow:0 6px 14px rgba(0,0,0,.1)}
+.kpi-label{color:#333;font-weight:700}
+
+.chk-label{background:#fff;border:1px solid #ddd;border-radius:20px}
+.chk-label:has(input:checked){background:var(--accent);border-color:var(--accent);color:var(--secondary);font-weight:700}
+
+.adm-table th,.comp-table th,.modal-table th,.tabela-percentuais th,.tabela-alunos-consolidado th{background:var(--primary);color:#fff;border-bottom:none}
+.adm-table tbody tr:hover{background:#FFF8E1}
+
+.modal-content{border-radius:var(--radius)}
+.modal-header{background:var(--primary)!important}
+.page-btn.active{background:var(--accent);color:var(--secondary);border-color:var(--accent);font-weight:700}
+.stats-pill{color:var(--primary);border-color:var(--accent)}
+.btn-relatorio-consolidado{background:var(--card);border:none;color:#333;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.btn-relatorio-consolidado:hover{background:var(--accent);color:var(--secondary)}
+.btn-refresh{border-radius:8px}
+.pdf-consolidado-header{border-bottom-color:var(--accent)}
+.pdf-consolidado-header h2,.grupo-titulo{color:var(--primary)}
+select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);border-color:var(--accent)}
