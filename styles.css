@@ -160,3 +160,9 @@ tr.transferido{opacity:.5;text-decoration:line-through}
 .pdf-consolidado-header{border-bottom-color:var(--accent)}
 .pdf-consolidado-header h2,.grupo-titulo{color:var(--primary)}
 select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);border-color:var(--accent)}
+/* ===== CONTROLE DE TELAS (não remover) ===== */
+.hidden{display:none!important}
+.screen{display:none}
+.screen.active{display:block}
+#screen-login.active{display:flex;align-items:center;justify-content:center;min-height:100vh}
+
