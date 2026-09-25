@@ -21,7 +21,19 @@ const db = getFirestore(app);
 const authSec = getAuth(initializeApp(firebaseConfig, 'secundario'));
 
 // ================= CONSTANTES / HELPERS =================
-const NIVEIS = ["Nível 1", "Nível 2", "Nível 3", "Nível 4", "Iniciante", "Fluente"];
+const NIVEIS = ["Estágio 1", "Estágio 2", "Estágio 3", "Estágio 4", "Estágio 5", "Estágio 6"];
+const DESC = {
+    "Estágio 1": "Não lê, ou fala letras ou palavras ausentes no texto",
+    "Estágio 2": "Nomeia letras isoladas/soletra",
+    "Estágio 3": "Lê palavras de forma silabada",
+    "Estágio 4": "Lê corretamente sem respeitar ritmo, entonação e pausa",
+    "Estágio 5": "Lê respeitando ritmo, entonação e pausa",
+    "Estágio 6": "Lê e atribui sentido ao texto",
+    "Ausente": "Aluno ausente"
+};
+const PESO = { "Ausente": 0, "Estágio 1": 1, "Estágio 2": 2, "Estágio 3": 3, "Estágio 4": 4, "Estágio 5": 5, "Estágio 6": 6 };
+const CLS = { "Estágio 1": "n1", "Estágio 2": "n2", "Estágio 3": "n3", "Estágio 4": "n4", "Estágio 5": "ini", "Estágio 6": "flu", "Ausente": "aus" };
+
 const PESO = { "Ausente": 0, "Nível 1": 1, "Nível 2": 2, "Nível 3": 3, "Nível 4": 4, "Iniciante": 5, "Fluente": 6 };
 const CLS = { "Nível 1": "n1", "Nível 2": "n2", "Nível 3": "n3", "Nível 4": "n4", "Iniciante": "ini", "Fluente": "flu", "Ausente": "aus" };
 const SERIES_RURAL = ["1º Ano", "2º Ano", "3º Ano", "4º Ano", "5º Ano"];
@@ -73,7 +85,8 @@ function montarKPIs(containerId, isProf) {
     $(containerId).innerHTML = NIVEIS.map(n => `
         <div class="kpi-card hover-card" onclick="window.abrirModalIntervencao('${n}', ${isProf})" title="Ver alunos">
             <div class="kpi-num pct-${CLS[n]}" id="${isProf ? 'prof' : 'adm'}-${CLS[n]}" style="background:none">0%</div>
-            <div class="kpi-label">${n}</div>
+            <div class="kpi-label">${n}<br><small style="font-weight:normal;opacity:.8">${DESC[n]}</small></div>
+
         </div>`).join('');
 }
 
@@ -320,7 +333,8 @@ window.renderizarAvaliacao = () => {
                 <select onchange="window.updateNivel(${idx}, this.value)" ${dis}>
                     <option value="">Avaliar...</option>
                     <option value="Ausente" ${a.nivel === 'Ausente' ? 'selected' : ''}>⚠️ Ausente</option>
-                    ${NIVEIS.map(n => `<option ${a.nivel === n ? 'selected' : ''}>${n}</option>`).join('')}
+                    ${NIVEIS.map(n => `<option value="${n}" ${a.nivel === n ? 'selected' : ''}>${n} - ${DESC[n]}</option>`).join('')}
+
                 </select>
             </div>`;
         container.appendChild(div);
@@ -515,7 +529,8 @@ window.renderizarTabelaModal = (editavel) => {
                 <td><input type="checkbox" style="width:auto" onchange="${ref}.laudo=this.checked" ${a.laudo ? 'checked' : ''} ${dis}></td>
                 <td><input type="checkbox" style="width:auto" onchange="${ref}.transferido=this.checked; if(this.checked) ${ref}.nivel=''; window.renderizarTabelaModal(true)" ${a.transferido ? 'checked' : ''}></td>
                 <td><select onchange="${ref}.nivel=this.value" ${dis}><option value="">- Sem nota -</option>
-                    ${['Ausente', ...NIVEIS].map(n => `<option ${a.nivel === n ? 'selected' : ''}>${n}</option>`).join('')}</select></td></tr>`;
+                 ${['Ausente', ...NIVEIS].map(n => `<option value="${n}" title="${DESC[n]}" ${a.nivel === n ? 'selected' : ''}>${n}</option>`).join('')}</select></td></tr>`;
+
         } else {
             h += `<tr class="${a.transferido ? 'transferido' : ''}"><td>${escH(a.nome)}</td>${rural ? `<td>${escH(a.serieRural || '-')}</td>` : ''}
                 <td>${a.laudo ? '<span style="color:var(--purple)">Sim</span>' : 'Não'}</td><td>${a.transferido ? 'Sim' : 'Não'}</td>
@@ -564,7 +579,7 @@ function htmlListaNiveis(lista, niveis, idDoc) {
     if (!corpo) return null;
     return `<div id="${idDoc}" style="padding:20px;background:white;">
         <div class="pdf-consolidado-header"><h2>Relatório de Intervenção Pedagógica</h2>
-        <p class="pdf-subtitulo">Níveis: <b>${niveis.join(' | ')}</b> • Gerado em ${new Date().toLocaleDateString('pt-BR')}</p></div>${corpo}</div>`;
+        <p class="pdf-subtitulo">Estágios: <b>${niveis.join(' | ')}</b> • Gerado em ${new Date().toLocaleDateString('pt-BR')}</p></div>${corpo}</div>`;
 }
 
 window.abrirModalIntervencao = (nivel, isProf) => {
@@ -575,7 +590,7 @@ window.abrirModalIntervencao = (nivel, isProf) => {
     $('modal-intervencao').classList.remove('hidden');
 };
 
-window.imprimirIntervencao = () => gerarPdfDe($('documento-pdf'), `Intervencao_${nivelAtual}.pdf`);
+window.imprimirIntervencao = () => gerarPdfDe($('documento-pdf'), `Intervencao_${nivelAtual.replace(' ', '_')}.pdf`    );
 
 window.abrirModalRelatorioAvancado = (isProf) => {
     modoAvancadoProf = isProf;
@@ -587,13 +602,13 @@ window.abrirModalRelatorioAvancado = (isProf) => {
 
 window.gerarVisualizacaoRelatorioAvancado = () => {
     const niveis = [...document.querySelectorAll('.chk-nivel:checked')].map(c => c.value);
-    if (!niveis.length) return alert('Selecione pelo menos um nível.');
+    if (!niveis.length) return alert('Selecione pelo menos um estágio.');
     const h = htmlListaNiveis(modoAvancadoProf ? filteredProf : filteredAdm, niveis, 'documento-pdf-avancado');
-    $('conteudo-pdf-avancado').innerHTML = h || '<div class="vazio">Nenhum aluno encontrado para os níveis selecionados.</div>';
+    $('conteudo-pdf-avancado').innerHTML = h || '<div class="vazio">Nenhum aluno encontrado para os estágios selecionados.</div>';
     $('btn-print-avancado').classList.toggle('hidden', !h);
 };
 
-window.imprimirRelatorioAvancado = () => gerarPdfDe($('documento-pdf-avancado'), 'Relatorio_Niveis.pdf');
+window.imprimirRelatorioAvancado = () => gerarPdfDe($('documento-pdf-avancado'), 'Relatorio_Estagios.pdf');
 
 // ================= EVOLUÇÃO =================
 const chaveTurma = d => d.turmaId || `${d.escola}|${d.serie}|${d.turma}`;
@@ -678,7 +693,7 @@ function renderTableAdm() {
     $('tabela-envios').innerHTML = page.length ? page.map(({ d, alunos }) => {
         const c = contar(alunos);
         return `<tr><td>${escH(d.escola)}</td><td>${escH(d.serie)} ${escH(d.turma)}</td><td>${escH(d.data_avaliacao)}</td>
-            <td>${escH(d.professor)}</td><td>${c.aval ? pct(c.cont['Fluente'], c.aval) + '%' : '-'}</td>
+            <td>${escH(d.professor)}</td><td>${c.aval ? pct(c.cont['Estágio 6'], c.aval) + '%' : '-'}</td>
             <td><button class="btn-table" onclick="window.abrirModalTurma('${d.id}', true)">🔍</button>
                 <button class="btn-table" onclick="window.excluirAvaliacao('${d.id}')">🗑️</button></td></tr>`;
     }).join('') : "<tr><td colspan='6'>Sem dados.</td></tr>";
@@ -793,8 +808,8 @@ window.gerarVisualizacaoConsolidado = () => {
         const fN = $('filtro-cons-nivel').value;
         const rows = [...mapa.values()].filter(r => fN === 'TODOS' || r.nivel === fN)
             .sort((a, b) => (PESO[b.nivel] ?? -1) - (PESO[a.nivel] ?? -1) || a.nome.localeCompare(b.nome));
-        h += `<p><b>${rows.length}</b> aluno(s) (último nível registrado)</p>
-            <table class="tabela-alunos-consolidado"><thead><tr><th>#</th><th>Aluno</th><th>Escola</th><th>Turma</th><th>Data</th><th>Nível</th></tr></thead><tbody>
+        h += `<p><b>${rows.length}</b> aluno(s) (último estágio registrado)</p>
+            <table class="tabela-alunos-consolidado"><thead><tr><th>#</th><th>Aluno</th><th>Escola</th><th>Turma</th><th>Data</th><th>Estágio</th></tr></thead><tbody>
             ${rows.map((r, i) => `<tr><td>${i + 1}</td><td>${escH(r.nome)} ${r.laudo ? '<b style="color:var(--purple)">[Laudo]</b>' : ''}</td>
                 <td>${escH(r.escola)}</td><td>${escH(r.turma)}</td><td>${escH(r.data)}</td>
                 <td><span class="nivel-tag nivel-tag-${CLS[r.nivel] || 'vazio'}">${escH(r.nivel || 'Sem nota')}</span></td></tr>`).join('')}
@@ -813,7 +828,7 @@ window.gerarVisualizacaoConsolidado = () => {
         h += `<div class="relatorio-resumo-geral"><h4>📊 Resumo Geral (${g.total} alunos • ${g.aval} avaliados • ${g.aus} ausentes)</h4>
             ${tabelaPercentuais([{ nome: 'REDE / FILTRO ATUAL', c: g, media: mediaPonderada(g) }])}</div>
             ${tabelaPercentuais(rows)}
-            <p style="font-size:0.8rem;color:#777;margin-top:10px;">% dos níveis sobre avaliados; % de ausentes sobre o total. Média: Nível 1 = 1 ... Fluente = 6.</p>`;
+            <p style="font-size:0.8rem;color:#777;margin-top:10px;">% dos níveis sobre avaliados; % de ausentes sobre o total. Média: Estágio 1 = 1 ... Estágio 6 = 6.</p>`;
     }
     $('conteudo-pdf-consolidado').innerHTML = h + '</div>';
     $('btn-print-consolidado').classList.remove('hidden');
